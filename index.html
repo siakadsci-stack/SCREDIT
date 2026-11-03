@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#0A6A5A">
+<meta name="description" content="S crédits : suivi des crédits clients, des versements et des rappels de recouvrement.">
+<title>S crédits</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="icons/favicon-64.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="S crédits">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="lock" id="lock"><div class="lock-card"><p>Vérification de la licence…</p></div></div>
+
+<div class="wrap" id="app" hidden>
+  <header class="top">
+    <div class="brand">
+      <div class="lockup">
+        <span id="logoHead"></span>
+        <h1 class="wordmark"><span class="visually-hidden">S </span>crédits</h1>
+      </div>
+      <p class="tagline">Sommes dues par vos clients, versements reçus et dates de relance.</p>
+    </div>
+    <div class="top-acts">
+      <button class="btn" id="btnAdmin" type="button" data-adm="open" hidden>Administrateur</button>
+      <button class="btn btn-primary" id="btnNew" type="button" aria-expanded="false" aria-controls="formPanel">+ Nouveau crédit</button>
+    </div>
+  </header>
+
+  <section class="licbar" id="licBanner" role="status" hidden></section>
+
+  <section class="summary" id="summary" aria-label="Synthèse"></section>
+
+  <section class="alerts" id="alerts" role="alert" hidden></section>
+
+  <section class="panel" id="formPanel" hidden>
+    <h2>Nouveau crédit</h2>
+    <form id="form" novalidate>
+      <div class="fields">
+        <div class="field full">
+          <label for="fNom">Nom du client</label>
+          <input id="fNom" type="text" autocomplete="off" placeholder="Ex. Koffi Yao">
+        </div>
+        <div class="field">
+          <label for="fTotal">Montant total dû (FCFA)</label>
+          <input id="fTotal" type="number" inputmode="decimal" min="0" step="any" placeholder="Ex. 250000">
+        </div>
+        <div class="field">
+          <label for="fAvance">Avance versée (FCFA)</label>
+          <input id="fAvance" type="number" inputmode="decimal" min="0" step="any" placeholder="0">
+          <span class="hint">Laissez vide si le client n'a rien versé.</span>
+        </div>
+        <div class="field">
+          <label for="fRappel">Date de rappel de recouvrement</label>
+          <input id="fRappel" type="date">
+          <div class="chips" role="group" aria-label="Raccourcis de date">
+            <button class="chip" type="button" data-add="7">Dans 7 jours</button>
+            <button class="chip" type="button" data-add="15">Dans 15 jours</button>
+            <button class="chip" type="button" data-add="30">Dans 30 jours</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="fTel">Téléphone (facultatif)</label>
+          <input id="fTel" type="tel" autocomplete="off" placeholder="Ex. 07 00 00 00 00">
+        </div>
+        <div class="field full">
+          <label for="fNote">Note (facultatif)</label>
+          <input id="fNote" type="text" autocomplete="off" placeholder="Ex. Marchandise livrée le 28 octobre">
+        </div>
+        <div class="field">
+          <label for="fRecto">Pièce d'identité, recto (photo)</label>
+          <input id="fRecto" type="file" accept="image/*">
+          <span class="hint">Photo réduite automatiquement et enregistrée uniquement sur cet appareil.</span>
+        </div>
+        <div class="field">
+          <label for="fVerso">Pièce d'identité, verso (facultatif)</label>
+          <input id="fVerso" type="file" accept="image/*">
+        </div>
+      </div>
+      <div class="live" aria-live="polite">
+        <span>Reste à payer après l'avance</span>
+        <strong id="liveReste">0 FCFA</strong>
+      </div>
+      <p class="form-error" id="formError" role="alert"></p>
+      <div class="form-actions">
+        <button class="btn btn-primary" type="submit">Enregistrer le crédit</button>
+        <button class="btn" type="button" id="btnCancel">Annuler</button>
+      </div>
+    </form>
+  </section>
+
+  <div class="toolbar">
+    <div class="chips" role="group" aria-label="Filtrer les crédits" id="filters">
+      <button class="chip" type="button" data-filter="all" aria-pressed="true">Tous</button>
+      <button class="chip" type="button" data-filter="due" aria-pressed="false">À relancer</button>
+      <button class="chip" type="button" data-filter="paid" aria-pressed="false">Soldés</button>
+    </div>
+    <input class="search" id="search" type="search" placeholder="Rechercher un client" aria-label="Rechercher un client">
+  </div>
+
+  <section class="ledger" id="list" aria-label="Liste des crédits">
+    <div class="empty"><p>Chargement de vos crédits…</p></div>
+  </section>
+
+  <footer class="foot" id="foot"></footer>
+</div>
+
+<div class="overlay" id="overlay" role="alertdialog" aria-modal="true" aria-labelledby="ovTitle" hidden>
+  <div class="dialog" id="dialog"></div>
+</div>
+<div class="overlay admin-ov" id="adminOv" role="dialog" aria-modal="true" aria-labelledby="adTitle" hidden>
+  <div class="dialog admin" id="adDialog"></div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script src="store.js"></script>
+<script src="app.js"></script>
+<script>
+  /* Fonctionnement hors ligne : le service worker ne s'active que sur http://localhost ou https:// */
+  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+    window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
+  }
+</script>
+</body>
+</html>
